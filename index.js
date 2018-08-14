@@ -1,4 +1,31 @@
 /**
+ * 自动为绑定loading的state属性生成loading的相关操作方法
+ * @param state
+ * @param getters
+ * @param mutations
+ * @param stateNameArray 要绑定loading的state属性数组
+ */
+function mixin({state, getters, mutations}, stateNameArray = []) {
+  stateNameArray.forEach(name => {
+    let loadingName;
+    if (typeof name === 'object') {
+      let stateName = Object.keys(name)[0]
+      if (Array.isArray(stateName) && !name[stateName]) {
+        throw new Error('When multiple state share a loading, the loading name not be null')
+      }
+      loadingName = name[stateName]
+    } else {
+      loadingName = normalizeLoadingName(name)
+    }
+    if (loadingName) {
+      state[loadingName] = false
+      getters[loadingName] = getLoadingGetter(loadingName)
+      mutations[normalizeMutationName(loadingName)] = getLoadingMutation(loadingName)
+    }
+  })
+}
+
+/**
  * 生成loading action
  * @param commit
  * @param loading
@@ -41,34 +68,54 @@ function mapLoadingState(stateObj, totalLoadingName) {
 }
 
 /**
- * 生成loading mutation
+ * 生成loading mutation集合
  * @param nameArray mutation name数组
  * @returns {Array} 返回mutation方法数组
  */
-function mapLoadingMutation(nameArray = []) {
+function mapLoadingMutations(nameArray = []) {
   let res = {}
   nameArray.forEach(name => {
     let fnName = normalizeMutationName(name)
-    res[fnName] = (state, loading) => {
-      state[name] = loading
-    }
+    res[fnName] = getLoadingMutation(name)
+  })
+  return res
+}
+
+
+/**
+ * 生成loading getters集合
+ * @param nameArray loading state name array
+ * @returns {{}} 返回getters方法数组
+ */
+function mapLoadingGetters(nameArray = []) {
+  let res = {}
+  normalizeMap(nameArray).forEach(item => {
+    res[item['key']] = getLoadingGetter(item['val'])
   })
   return res
 }
 
 /**
- * 生成loading getters
- * @param nameArray loading state name array
- * @returns {{}}
+ * 生成一个loading mutation
+ * @param name state的属性名称
+ * @returns {function(*, *)}
  */
-function mapLoadingGetter(nameArray = []) {
-  let res = {}
-  normalizeMap(nameArray).forEach(item => {
-    res[item['key']] = (state) => {
-      return state[item['val']]
-    }
-  })
-  return res
+function getLoadingMutation(name) {
+  return (state, loading) => {
+    state[name] = loading
+  }
+}
+
+
+/**
+ * 生成一个loading getter
+ * @param val state的属性名称
+ * @returns {function(*, *)}
+ */
+function getLoadingGetter(val) {
+  return (state) => {
+    return state[val]
+  }
 }
 
 /**
@@ -119,9 +166,15 @@ function pointer(commit, loading, fn) {
   }
 }
 
+
+export default {
+  mixin,
+  aopLoading
+}
 export {
+  mixin,
   aopLoading,
-  mapLoadingMutation,
+  mapLoadingMutations,
   mapLoadingState,
-  mapLoadingGetter
+  mapLoadingGetters
 }

@@ -2,7 +2,7 @@
   "name": "vuex-loading",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/vuex-loading.js",
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,7 +11,10 @@
     "type": "git",
     "url": "git+https://github.com/anthinkingcoder/vuex-loading.git"
   },
-  "keywords": [],
+  "keywords": [
+    "vue",
+    "vuex"
+  ],
   "author": "anthinkingcoder jojo837769723@gmail.com",
   "license": "ISC",
   "bugs": {
