@@ -41,7 +41,7 @@ function aopLoading(commit, loading, fn) {
     fn.call(null,
         (...arg) => success.apply(null, arg),
         (...arg) => error.apply(null, arg),
-        otherArg)
+        ...otherArg)
   }
 }
 
