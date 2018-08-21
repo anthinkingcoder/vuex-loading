@@ -23,8 +23,8 @@ const api = {
       errorCb(error)
     })
   },
-  productDetail () {
-    return fetch('/api/productDetail')
+  productDetail (id) {
+    return fetch(`/api/productDetail?id=${id}`)
   }
 }
 const state = {
@@ -49,8 +49,8 @@ const actions = {
     })
   },
   productDetail ({{commit}}) {
-    vxl.aopLoading(commit, 'productDetail', api.productDetail,true)
-    .then((result) => {
+    let request = vxl.aopLoading(commit, 'productDetail', api.productDetail,true)
+    request(1).then((result) => {
          commit('setProducts', result)
     }).catch(error => {
       console.info(error)
