@@ -26,14 +26,26 @@ function mixin({state, getters, mutations}, stateNameArray = []) {
 }
 
 /**
- * 生成loading action
- * @param commit
- * @param loading
- * @param fn
- * @returns {function(*=, *=)}
+ * 代理loading
+ * @param commit vuex commit
+ * @param loading loading name
+ * @param fn be proxy function
+ * @param isPromise fn是否返回promise，false表示fn不返回promise， 而是以回调的形式返回
  */
-function aopLoading(commit, loading, fn) {
+
+function aopLoading(commit, loading, fn, isPromise = false) {
   loading = normalizeMutationName(loading)
+  return isPromise ? aopPromise(commit, loading, fn) : aopCallback(commit, loading, fn);
+}
+
+/**
+ * 生成loading action(回调式)
+ * @param commit vuex commit
+ * @param loading loading name
+ * @param fn be proxy function
+ * @returns {function(*=, *=)} proxy function
+ */
+function aopCallback(commit, loading, fn) {
   return (success, error, ...otherArg) => {
     commit(loading, true)
     success = pointer(commit, loading, success)
@@ -42,6 +54,31 @@ function aopLoading(commit, loading, fn) {
         (...arg) => success.apply(null, arg),
         (...arg) => error.apply(null, arg),
         ...otherArg)
+  }
+}
+
+/**
+ * 生成loading action(promise式)
+ * @param commit vuex commit
+ * @param loading loading name
+ * @param fn be proxy function
+ * @returns {function(*=, *=)} proxy function
+ */
+function aopPromise(commit, loading, fn) {
+  let showLoading = () => {
+    commit(loading, true)
+  }
+  let hideLoading = (result) => {
+    commit(loading, false)
+    return result
+  }
+  return (...arg) => {
+    let promise = Promise.resolve(loading)
+    let chain = [showLoading, undefined, fn.bind(null, ...arg), undefined, hideLoading, hideLoading]
+    while (chain.length > 0) {
+      promise = promise.then(chain.shift(), chain.shift())
+    }
+    return promise
   }
 }
 

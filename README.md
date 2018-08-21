@@ -1,5 +1,5 @@
 # vuex-loading
-简化vuex中异步请求，不得不维护loading state的问题，这不是一个loading ui插件，仅仅只是一个简化。
+简化vuex中异步请求，不得不维护loading state的问题,支持代理异步回调与promise
 
 ## Installing
 
@@ -22,10 +22,14 @@ const api = {
     }).catch(error => {
       errorCb(error)
     })
+  },
+  productDetail () {
+    return fetch('/api/productDetail')
   }
 }
 const state = {
-  products: []
+  products: [],
+  productDetail: {}
 }
 
 const getters = {
@@ -34,15 +38,22 @@ const getters = {
   }
 }
 
+//aopLoading(commit,loadingName, fn, isPromise)
+//有两种fn可以代理，第一种fn是一个promise，第二种fn是接受两个回调函数参数->成功回调和失败回调,设置isPromise可以选择指定方式代理。
 const actions = {
-  //aopLoading会代理api.listProduct，然后返回一个被代理的api.listProduct
   listProduct ({{commit}}) {
     let request = vxl.aopLoading(commit, 'productsLoading',api.listProduct)
-    //代理函数调用的时候，会先执行commit('productsLoading',true),在异步请求执行完成后，会在成功回调和失败回调调用前执行commit('productsLoading',false)
     request((result) => {
       commit('setProducts', result)
     }, error => {
-      
+    })
+  },
+  productDetail ({{commit}}) {
+    vxl.aopLoading(commit, 'productDetail', api.productDetail,true)
+    .then((result) => {
+         commit('setProducts', result)
+    }).catch(error => {
+      console.info(error)
     })
   }
 }
@@ -50,13 +61,16 @@ const actions = {
 const mutations = {
   setProducts (state, item) {
     state.products = item
+  },
+  setProductDetail(state, item) {
+    state.productDetail = item
   }
 }
 
 //使用vxl.mixin将productsLoading相关操作注入state,getters,mutations中，这样我们不需要手写大堆的代码
-vxl.mixin({state,getters,mutations}, ['products'])
+vxl.mixin({state,getters,mutations}, ['products','productDetail'])
 //或者可以指定loading名字
-vxl.mixin({state,getters,mutations}, [{'products':'productsLoading'}])
+vxl.mixin({state,getters,mutations}, [{'products':'productsLoading'},'productDetail'])
 
 export {
   state,getters,actions,mutations
