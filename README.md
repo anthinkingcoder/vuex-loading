@@ -9,8 +9,9 @@ Using npm:
 $ npm install vuex-loadings -s
 ```
 ## Know
-use vxl.aopLoading(commit,loadingName,fn,isPromise) to proxy fn, simplify loading state change
-use vxl.mixin({state,getters,mutations},stateObj) to automatic set loading state,loading getter,loading mutation for stateObj
+Simplify vuex loading state management need two step:
+1.use ```vxl.aopLoading(commit,loadingName,fn,isPromise)``` to proxy fn, simplify loading state change                              
+2.use ```vxl.mixin({state,getters,mutations},stateObj)``` to automatic set loading state,loading getter,loading mutation for stateObj
 
 ## Example
 ```js
