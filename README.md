@@ -8,6 +8,9 @@ Using npm:
 ```bash
 $ npm install vuex-loadings -s
 ```
+## Know
+use vxl.aopLoading(commit,loadingName,fn,isPromise) to proxy fn, simplify loading state change
+use vxl.mixin({state,getters,mutations},stateObj) to automatic set loading state,loading getter,loading mutation for stateObj
 
 ## Example
 ```js
@@ -38,6 +41,9 @@ const getters = {
   }
 }
 
+//vxl.aopLoading(commit, loadingName, fn, isPromise)
+//isPromise = true, fn must be a promise
+// isPromise = false, fn must be receiver two argument, cb and errorCb function
 const actions = {
   listProduct ({{commit}}) {
     //proxy callback
