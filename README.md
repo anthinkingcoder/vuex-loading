@@ -1,5 +1,5 @@
 # vuex-loading
-简化vuex中异步请求，不得不维护loading state的问题,支持代理异步回调与promise
+Simplify vuex loading state management
 
 ## Installing
 
@@ -10,12 +10,11 @@ $ npm install vuex-loadings -s
 ```
 
 ## Example
-
-
 ```js
 //product.js
 import vxl from 'vuex-loadings'
 const api = {
+  //callback
   listProduct (cb,errorCb) {
     fetch('/api/listProduct').then((result) => {
       cb(result)
@@ -23,6 +22,7 @@ const api = {
       errorCb(error)
     })
   },
+  //promise
   productDetail (id) {
     return fetch(`/api/productDetail?id=${id}`)
   }
@@ -38,23 +38,42 @@ const getters = {
   }
 }
 
-//aopLoading(commit,loadingName, fn, isPromise)
-//有两种fn可以代理，第一种fn是一个promise，第二种fn是接受两个回调函数参数->成功回调和失败回调,设置isPromise可以选择指定方式代理。
 const actions = {
   listProduct ({{commit}}) {
+    //proxy callback
     let request = vxl.aopLoading(commit, 'productsLoading',api.listProduct)
     request((result) => {
       commit('setProducts', result)
     }, error => {
     })
+    //it equal
+    //commit('setProductsLoading',true)
+    //api.listProduct((result) => {
+    //        commit('setProductsLoading',false)
+    //        commit('setProducts', result)
+    //      }, error => {
+    //        commit('setProductsLoading',false)
+    //      })
   },
   productDetail ({{commit}}) {
+    //proxy promise
     let request = vxl.aopLoading(commit, 'productDetail', api.productDetail,true)
     request(1).then((result) => {
          commit('setProducts', result)
     }).catch(error => {
       console.info(error)
     })
+    
+    //it equal
+    //commit('setProductDetailLoading',true)
+    //api.productDetail(1)
+    //      .then(result => {
+    //            commit('setProductDetailLoading',false)
+    //            commit('setProducts', result)})    
+    //      .catch(error => {
+    //            commit('setProductDetailLoading',false)
+    //            console.info(error)
+    //            })
   }
 }
 
@@ -67,16 +86,22 @@ const mutations = {
   }
 }
 
-//使用vxl.mixin将productsLoading相关操作注入state,getters,mutations中，这样我们不需要手写大堆的代码
+//it will be set loading state,loading getter,loading mutation for products,productDetail
+//default loading name is productsLoading,productDetailLoading
 vxl.mixin({state,getters,mutations}, ['products','productDetail'])
-//或者可以指定loading名字
+
+//or custom loading state name
 vxl.mixin({state,getters,mutations}, [{'products':'productsLoading'},'productDetail'])
 
-export {
-  state,getters,actions,mutations
+export default {
+  namespaced: true,
+  state,
+  getters,
+  actions,
+  mutations
 }
 ```
-### 另一种方式
+### other way
 
 ```js
 import {aopLoading, mapLoadingMutations, mapLoadingState, mapLoadingGetters} from '../vuex-loading'
@@ -90,10 +115,13 @@ const api = {
   }
 }
 const state = {
-  //为clues绑定loading，这种方法不支持自定义loading name，默认规则是clues -> cluesLoading
   ...mapLoadingState({
     clues: {},
   })
+  //it will be -> {
+  // clues: {}
+  // cluesLoading: {}
+  //}
 }
 
 
@@ -101,14 +129,16 @@ const getters = {
   clues(state) {
     return state.clues
   },
+  
+  // set getter function for cluesLoading
   ...mapLoadingGetters(['cluesLoading'])
-  //或者是自定义getters名
+  //or custom getter function name
   ...mapLoadingGetters({'cluesLoading': 'getCluesLoading'})
 }
 
 const actions = {
   listClue({commit}) {
-    //同上
+    //the same
     let request = aopLoading(commit, 'cluesLoading', marketApi.listClue)
     request(items => {
           commit('setClues', {items})
@@ -122,7 +152,7 @@ const mutations = {
   setClues(state, {items}) {
     state.clues = items
   },
-  //绑定mutations方法
+  //set mutation function for cluesLoading
   ...mapLoadingMutations(['cluesLoading'])
 }
 
