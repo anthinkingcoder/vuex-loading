@@ -74,7 +74,10 @@ function aopPromise(commit, loading, fn) {
   }
   return (...arg) => {
     let promise = Promise.resolve(loading)
-    let chain = [showLoading, undefined, fn.bind(null, ...arg), undefined, hideLoading, hideLoading]
+    let chain = [showLoading, undefined, fn.bind(null, ...arg), undefined, hideLoading, function (error) {
+      hideLoading()
+      return Promise.reject(error)
+    }]
     while (chain.length > 0) {
       promise = promise.then(chain.shift(), chain.shift())
     }
